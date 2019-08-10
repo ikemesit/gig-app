@@ -3,53 +3,35 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { User } from './models/user.model';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as uuid from 'uuid/v1';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UsersService {
-  private userStore: User[] = [];
+  constructor(
+    @InjectRepository(UserRepository)
+    private userRepository: UserRepository,
+  ) {}
 
-  getAllUsers(): User[] {
-    return this.userStore;
+  getAllUsers(): Promise<User[]> {
+    return this.userRepository.getAllUsers();
   }
 
-  getUserById(id: string): User {
-    return this.userStore.find(user => user.id === id);
+  getUserById(id: number): Promise<User> {
+    return this.userRepository.findOne({ id });
   }
 
-  createUser(createUserDto: CreateUserDto): User {
-    const {
-      firstName,
-      lastName,
-      middleName,
-      email,
-      address,
-      dob,
-      phone,
-    } = createUserDto;
-
-    const newUser = new User();
-    newUser.id = uuid();
-    newUser.firstName = firstName;
-    newUser.middleName = middleName;
-    newUser.lastName = lastName;
-    newUser.dob = dob;
-    newUser.address = address;
-    newUser.email = email;
-    newUser.phone = phone;
-
-    this.userStore.push(newUser);
-
-    return newUser;
+  createUser(createUserDto: CreateUserDto): Promise<User> {
+    return this.userRepository.createUser(createUserDto);
   }
 
-  updateUser(id: string, data: UpdateUserDto): User {
-    const found = this.getUserById(id);
+  async updateUser(id: number, data: UpdateUserDto): Promise<User> {
+    const user = await this.getUserById(id);
 
-    if (!found) {
+    if (!user) {
       throw new NotFoundException('User does not exist');
     }
 
@@ -58,15 +40,18 @@ export class UsersService {
     }
 
     for (const key of Object.keys(data)) {
-      found[key] = data[key];
+      user[key] = data[key];
     }
 
-    return found;
+    await user.save();
+
+    return user;
   }
 
-  deleteUser(id: string): void {
-    const found = this.getUserById(id);
-    const indx = this.userStore.indexOf(found);
-    this.userStore.splice(indx, 1);
+  async deleteUser(id: number): Promise<void> {
+    const deleteResult = await this.userRepository.delete(id);
+    if (deleteResult.affected === 0) {
+      throw new NotFoundException('User does not exist');
+    }
   }
 }
