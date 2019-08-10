@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { User } from './models/user.model';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -44,6 +48,10 @@ export class UsersService {
 
   updateUser(id: string, data: UpdateUserDto): User {
     const found = this.getUserById(id);
+
+    if (!found) {
+      throw new NotFoundException('User does not exist');
+    }
 
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('No update data provided');

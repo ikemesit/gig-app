@@ -13,6 +13,7 @@ import { UsersService } from './users.service';
 import { User } from './models/user.model';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserUpdateValidationPipe } from './pipes/user-update-validation.pipe';
 
 @Controller('users')
 export class UsersController {
@@ -37,7 +38,7 @@ export class UsersController {
   @Patch(':id')
   updateUser(
     @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body(UserUpdateValidationPipe) updateUserDto: UpdateUserDto,
   ): User {
     return this.userService.updateUser(id, updateUserDto);
   }

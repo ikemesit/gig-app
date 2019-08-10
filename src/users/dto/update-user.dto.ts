@@ -1,5 +1,24 @@
+import { IsOptional } from 'class-validator';
+
 export class UpdateUserDto {
-  email?: string;
-  address?: string;
-  phone?: string;
+  @IsOptional()
+  firstName: string;
+
+  @IsOptional()
+  middleName: string;
+
+  @IsOptional()
+  lastName: string;
+
+  @IsOptional()
+  dob: string;
+
+  @IsOptional()
+  email: string;
+
+  @IsOptional()
+  address: string;
+
+  @IsOptional()
+  phone: string;
 }
