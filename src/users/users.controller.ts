@@ -35,7 +35,7 @@ export class UsersController {
     return this.userService.createUser(createUserDto);
   }
 
-  @Patch(':id')
+  @Patch('/:id')
   updateUser(
     @Param('id') id: number,
     @Body(UserUpdateValidationPipe) updateUserDto: UpdateUserDto,
