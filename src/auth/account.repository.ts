@@ -6,15 +6,36 @@ import { Repository, EntityRepository } from 'typeorm';
 import { Account } from './account.entity';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import * as bcrypt from 'bcrypt';
+import { SignupCredentialsDto } from './dto/signup-credentials.dto';
+import { User } from '../users/user.entity';
 
 @EntityRepository(Account)
 export class AccountRepository extends Repository<Account> {
-  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<void> {
-    const { username, password } = authCredentialsDto;
+  async signUp(signupCredentialsDto: SignupCredentialsDto): Promise<void> {
+    const {
+      firstName,
+      lastName,
+      email,
+      middleName,
+      dob,
+      phone,
+      address,
+    } = signupCredentialsDto;
+    const user = new User();
+    user.firstName = firstName;
+    user.middleName = middleName;
+    user.lastName = lastName;
+    user.email = email;
+    user.phone = phone;
+    user.dob = dob;
+    user.address = address;
+
+    const { username, password } = signupCredentialsDto;
     const account = new Account();
     account.username = username;
     account.salt = await bcrypt.genSalt();
     account.password = await this.hashPassword(password, account.salt);
+    account.user = user;
 
     try {
       await account.save();
@@ -22,6 +43,7 @@ export class AccountRepository extends Repository<Account> {
       if (error.code === '23505') {
         throw new ConflictException('Username already exists');
       } else {
+        console.log(error);
         throw new InternalServerErrorException('Something strange happened');
       }
     }
@@ -29,10 +51,10 @@ export class AccountRepository extends Repository<Account> {
 
   async validateUser(authCredentialsDto: AuthCredentialsDto): Promise<string> {
     const { username, password } = authCredentialsDto;
-    const user = await this.findOne({ username });
+    const account = await this.findOne({ username });
 
-    if (user && user.validatePassword(password)) {
-      return user.username;
+    if (account && account.validatePassword(password)) {
+      return account.username;
     } else {
       return null;
     }
