@@ -43,7 +43,6 @@ export class AccountRepository extends Repository<Account> {
       if (error.code === '23505') {
         throw new ConflictException('Username already exists');
       } else {
-        console.log(error);
         throw new InternalServerErrorException('Something strange happened');
       }
     }
@@ -53,7 +52,7 @@ export class AccountRepository extends Repository<Account> {
     const { username, password } = authCredentialsDto;
     const account = await this.findOne({ username });
 
-    if (account && account.validatePassword(password)) {
+    if (account && (await account.validatePassword(password))) {
       return account.username;
     } else {
       return null;
